@@ -30,3 +30,5 @@ firstProgram/wc/wc
 interacting/todo/cmd/todo/*.json
 interacting/todo/cmd/todo/todo
 
+# Markdown Previewer Artifacts
+workingFiles/mdp/mdp

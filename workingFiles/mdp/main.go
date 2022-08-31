@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"runtime"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -31,6 +33,7 @@ const (
 func main() {
 	// Parse flags
 	filename := flag.String("file", "", "Markdown file to preview")
+	skipPreview := flag.Bool("s", false, "Skip auto-preview")
 	flag.Parse()
 
 	// If user did not provide input file, show usage
@@ -39,14 +42,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := run(*filename, os.Stdout); err != nil {
+	if err := run(*filename, os.Stdout, *skipPreview); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 // Coordinates execution of remaining functions
-func run(filename string, out io.Writer) error {
+func run(filename string, out io.Writer, skipPreview bool) error {
 	// Read all data from input file and check for errors
 	// ReadFile reads content of input markdown file into slice of bytes
 	input, err := os.ReadFile(filename)
@@ -76,7 +79,15 @@ func run(filename string, out io.Writer) error {
 	fmt.Fprintln(out, outName)
 
 	// Save HTML content to a file
-	return saveHTML(outName, htmlData)
+	if err := saveHTML(outName, htmlData); err != nil {
+		return err
+	}
+
+	if skipPreview {
+		return nil
+	}
+
+	return preview(outName)
 }
 
 // Receives a slice of bytes with markdown content, outputs slice of bytes with converted HTML content
@@ -102,4 +113,36 @@ func parseContent(input []byte) []byte {
 func saveHTML(outFname string, data []byte) error {
 	// Write the bytes to the file (0644 is read/write by owner, but only readable by anyone else)
 	return os.WriteFile(outFname, data, 0644)
+}
+
+// Automatically preview generated html file
+func preview(fname string) error {
+	cName := ""
+	cParams := []string{}
+
+	// Define executable based on OS
+	switch runtime.GOOS {
+	case "linux":
+		cName = "xdg-open"
+	case "windows":
+		cName = "cmd.exe"
+		cParams = []string{"/C", "start"}
+	case "darwin":
+		cName = "open"
+	default:
+		return fmt.Errorf("OS not supported")
+	}
+
+	// Append filename to parameters slice
+	cParams = append(cParams, fname)
+
+	// Locate executable in PATH
+	cPath, err := exec.LookPath(cName)
+
+	if err != nil {
+		return err
+	}
+
+	// Open the file using default program
+	return exec.Command(cPath, cParams...).Run()
 }
