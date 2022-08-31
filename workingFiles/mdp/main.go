@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -39,14 +39,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := run(*filename); err != nil {
+	if err := run(*filename, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 // Coordinates execution of remaining functions
-func run(filename string) error {
+func run(filename string, out io.Writer) error {
 	// Read all data from input file and check for errors
 	// ReadFile reads content of input markdown file into slice of bytes
 	input, err := os.ReadFile(filename)
@@ -57,8 +57,23 @@ func run(filename string) error {
 	// Converts markdown to HTML
 	htmlData := parseContent(input)
 
-	outName := fmt.Sprintf("%s.html", filepath.Base(filename))
-	fmt.Println(outName)
+	// TempFile replaces the * character with a random number
+	// Create the temporary file and check for errors
+	temp, err := os.CreateTemp("", "mdp*.html")
+	if err != nil {
+		return err
+	}
+	// We close the temp file after creating it as we don't want to write to it just yet
+	if err := temp.Close(); err != nil {
+		return err
+	}
+
+	outName := temp.Name()
+
+	// Write the temp filename to the writer
+	// This allows us to pass Stdout when running via CLI, and bytes.Buffer to capture output in a buffer
+	// when running via a test
+	fmt.Fprintln(out, outName)
 
 	// Save HTML content to a file
 	return saveHTML(outName, htmlData)

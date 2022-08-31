@@ -3,12 +3,12 @@ package main
 import (
 	"bytes"
 	"os"
+	"strings"
 	"testing"
 )
 
 const (
 	inputFile  = "./testdata/test1.md"
-	resultFile = "test1.md.html"
 	goldenFile = "./testdata/test1.md.html"
 )
 
@@ -39,9 +39,15 @@ func TestParseContent(t *testing.T) {
 
 // integration test checking the run function executes workflow as expected
 func TestRun(t *testing.T) {
-	if err := run(inputFile); err != nil {
+	var mockStdOut bytes.Buffer
+
+	// Pass the address of the bytes buffer using & operator to the run function
+	if err := run(inputFile, &mockStdOut); err != nil {
 		t.Fatal(err)
 	}
+
+	resultFile := strings.TrimSpace(mockStdOut.String())
+	t.Logf("resultFile: %s\n", resultFile)
 
 	result, err := os.ReadFile(resultFile)
 	if err != nil {
