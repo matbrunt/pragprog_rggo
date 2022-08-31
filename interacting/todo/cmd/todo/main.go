@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"pragprog.com/rggo/interacting/todo"
 )
@@ -27,7 +30,7 @@ func main() {
 
 	// Parsing command line flags
 	// Assigned variables are pointers, so will need to be dereferenced with * when used later
-	task := flag.String("task", "", "Task to be included in the ToDo list")
+	add := flag.Bool("add", false, "Add task to the ToDo list")
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
 
@@ -77,10 +80,19 @@ func main() {
 			os.Exit(1)
 		}
 
-	// Add a new task if -task flag set (and not an empty string)
-	case *task != "":
+	// Add a new task if -add flag set
+	case *add:
+		// When any arguments (excluding flags) are provided, they will be
+		// used as the new task
+		// ... suffix operator expands the slice into a list of values
+		t, err := getTask(os.Stdin, flag.Args()...)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
 		// Add the task
-		l.Add(*task)
+		l.Add(t)
 
 		// Save the new list
 		if err := l.Save(todoFileName); err != nil {
@@ -94,4 +106,27 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Invalid option")
 		os.Exit(1)
 	}
+}
+
+// getTask function decides where to get the description for a new task from:
+// arguments or STDIN
+// ...string means 0 or more arguments of type string (makes it a variadic function)
+func getTask(r io.Reader, args ...string) (string, error) {
+	// If arguments provided, return them concatenated with a space
+	if len(args) > 0 {
+		return strings.Join(args, " "), nil
+	}
+
+	// Otherwise scan for a single input line from the passed reader interface
+	s := bufio.NewScanner(r)
+	s.Scan()
+	if err := s.Err(); err != nil {
+		return "", err
+	}
+
+	if len(s.Text()) == 0 {
+		return "", fmt.Errorf("task cannot be blank")
+	}
+
+	return s.Text(), nil
 }

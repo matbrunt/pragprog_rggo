@@ -28,4 +28,5 @@ firstProgram/wc/wc
 
 # ToDo List Artifacts
 interacting/todo/cmd/todo/*.json
+interacting/todo/cmd/todo/todo
 
