@@ -9,7 +9,7 @@ import (
 )
 
 // Hardcoding the file name
-const todoFileName = ".todo.json"
+var todoFileName = ".todo.json"
 
 // Command line flags:
 // -list: Boolean flag, when specified tool will list all to-do items
@@ -32,6 +32,11 @@ func main() {
 	complete := flag.Int("complete", 0, "Item to be completed")
 
 	flag.Parse()
+
+	// Check if the user defined the Env Var for a custom file name
+	if os.Getenv("TODO_FILENAME") != "" {
+		todoFileName = os.Getenv("TODO_FILENAME")
+	}
 
 	// Create pointer to type todo.List by using address operator & to get the address
 	// of an empty instance of todo.List
