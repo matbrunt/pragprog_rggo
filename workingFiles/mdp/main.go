@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"time"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -87,6 +88,10 @@ func run(filename string, out io.Writer, skipPreview bool) error {
 		return nil
 	}
 
+	// Tidy up generated preview files once the function has terminated
+	// (calling os.Exit would terminate immediately, and not run any deferred function calls)
+	defer os.Remove(outName)
+
 	return preview(outName)
 }
 
@@ -144,5 +149,13 @@ func preview(fname string) error {
 	}
 
 	// Open the file using default program
-	return exec.Command(cPath, cParams...).Run()
+	err = exec.Command(cPath, cParams...).Run()
+
+	// Simple hack to resolve race condition of browser not opening the file before the run function defer
+	// call deletes the temporary file
+	// Give the browser some time to open the file before deleting it
+	// Better way is to clean up resources using a signal, will be implemented later in "Handling Signals"
+	time.Sleep(2 * time.Second)
+
+	return err
 }
