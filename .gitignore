@@ -32,3 +32,6 @@ interacting/todo/cmd/todo/todo
 
 # Markdown Previewer Artifacts
 workingFiles/mdp/mdp
+
+# File System Walker Artifacts
+fileSystem/walk/walk
