@@ -35,3 +35,6 @@ workingFiles/mdp/mdp
 
 # File System Walker Artifacts
 fileSystem/walk/walk
+
+# Performance Artifacts
+performance/colStats/colStats
