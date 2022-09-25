@@ -13,8 +13,7 @@ import (
 
 var (
 	// Used for flags
-	cfgFile     string
-	userLicense string
+	cfgFile string
 
 	rootCmd = &cobra.Command{
 		Version: "0.1",
@@ -49,19 +48,16 @@ func init() {
 
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
+	// persistent flags are available to the command, and all subcommands
+	// under that command. By adding a persistent flag to the root command,
+	// you make it global.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pScan.yaml)")
-	rootCmd.PersistentFlags().StringP("author", "a", "YOUR NAME", "author name for copyright attribution")
-	rootCmd.PersistentFlags().StringVarP(&userLicense, "license", "l", "", "name of license for the project")
-	rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
-	viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
-	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
-	viper.SetDefault("author", "NAME HERE <EMAIL ADDRESS>")
-	viper.SetDefault("license", "apache")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// '--hosts-file' or '-f' flag, not specified defaults to 'pScan.hosts'
+	rootCmd.PersistentFlags().StringP("hosts-file", "f", "pScan.hosts", "pScan hosts file")
+	// rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
+	// viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
 
 	versionTemplate := `{{printf "%s: %s - version %s\n" .Name .Short .Version}}`
 	rootCmd.SetVersionTemplate(versionTemplate)
