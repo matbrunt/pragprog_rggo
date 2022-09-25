@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -46,6 +47,11 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	cobra.OnInitialize(initConfig)
 
+	// Viper reads in environment variables starting with PSCAN_
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvPrefix("PSCAN")
+
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	// persistent flags are available to the command, and all subcommands
@@ -56,6 +62,11 @@ func init() {
 
 	// '--hosts-file' or '-f' flag, not specified defaults to 'pScan.hosts'
 	rootCmd.PersistentFlags().StringP("hosts-file", "f", "pScan.hosts", "pScan hosts file")
+
+	// allow user to override hosts-file config variable with environment variable
+	// using PSCAN_HOSTS_FILE
+	viper.BindPFlag("hosts-file", rootCmd.PersistentFlags().Lookup("hosts-file"))
+
 	// rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
 	// viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
 
@@ -72,14 +83,16 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".cobra" (without extension).
+		// Search config in home directory with name ".pScan" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".cobra")
+		viper.SetConfigName(".pScan")
 	}
 
+	// read in environment variables that match
 	viper.AutomaticEnv()
 
+	// If a config file is found, read it in
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}

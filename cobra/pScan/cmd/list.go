@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"pragprog.com/rggo/cobra/pScan/scan"
 )
 
@@ -23,10 +24,7 @@ var listCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// we only parse command args in here then call out to external function
 		// to make testing easier
-		hostsFile, err := cmd.Flags().GetString("hosts-file")
-		if err != nil {
-			return err
-		}
+		hostsFile := viper.GetString("hosts-file")
 
 		return listAction(os.Stdout, hostsFile, args)
 	},
