@@ -43,3 +43,4 @@ performance/colStats/colStats
 # Cobra Port Scan Artifacts
 cobra/pScan/pScan
 cobra/pScan/pScan.hosts
+cobra/pScan/docs/
